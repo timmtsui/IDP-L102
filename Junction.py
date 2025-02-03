@@ -15,6 +15,7 @@ def Junction():
     if S1 == 0 and S4 == 0:
         # Not at junction
         junction_type = "line"
+        return "Line"
     elif S1 == 1:
         if S4 == 1:
             # T junction
@@ -25,3 +26,13 @@ def Junction():
     else:
         # Right junction
         junction_type = "R"
+    
+    expected_junction = instruction_set[0]
+
+    if junction_type == expected_junction:
+        next_instruction = instruction_set[1]
+        if next_instruction == "turn":
+            turn()
+        time.sleep(2)
+    else:
+        return "Lost"
