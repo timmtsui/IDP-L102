@@ -51,13 +51,13 @@ def get_turn_direction(prev, current, next):
     r, c = current
     nr, nc = next
     if nr > r:
-        return 'Straight' if prev[0] < r else ('Left' if prev[1] < c else 'Right')
+        return 'Straight' if prev[0] < r else ('Right' if prev[1] < c else 'Left')
     if nr < r:
-        return 'Straight' if prev[0] > r else ('Left' if prev[1] > c else 'Right')
+        return 'Straight' if prev[0] > r else ('Right' if prev[1] > c else 'Left')
     if nc > c:
-        return 'Straight' if prev[1] < c else ('Left' if prev[0] > r else 'Right')
+        return 'Straight' if prev[1] < c else ('Right' if prev[0] > r else 'Left')
     if nc < c:
-        return 'Straight' if prev[1] > c else ('Left' if prev[0] < r else 'Right')
+        return 'Straight' if prev[1] > c else ('Right' if prev[0] < r else 'Left')
     return 'Straight'
 
 def astar(nav_grid, start, end):
@@ -133,7 +133,7 @@ Nav_Grid = [
 ]
 
 # Example usage
-start = (0, 0)
+start = (1, 1)
 end = (5, 4)
 waypoints = astar(Nav_Grid, start, end)
 print("Waypoints:", waypoints)
