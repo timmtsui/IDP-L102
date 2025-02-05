@@ -15,6 +15,12 @@ S3 = Pin(19, Pin.IN, Pin.PULL_DOWN)
 S4 = Pin(18, Pin.IN, Pin.PULL_DOWN)
 button = Pin(22, Pin.IN, Pin.PULL_DOWN)
 on = 0
+current_pos = [5,2]
+depot_1 = [5,4]
+depot_2  = [5,0]
+start = [5, 2]
+boxes_delivered = 0
+
 # Nav_Grid is in [N, E, S, W]
 Nav_Grid = [
     [[0,1,1,0] , [0,1,0,1] , [0,1,1,1] , [0,1,1,1] , [0,0,1,1]],
@@ -228,7 +234,33 @@ def navigate(start, end):
 
         sleep(0.1)
 
+#handles movement and mechanism to pick up box
+# also calls qr code scan and returns drop off coordinates
+# should leave robot in N orientation away from junctions
+def pickup():
+    return
+
+def dropoff():
+    return
+
+
 while True:
-    navigate((0,0), (5,4))
-        
-    sleep(0.1)
+    #When start button is pressed
+    move(50,2)
+    navigate(current_pos, depot_1)
+
+    while boxes_delivered < 8:
+        destination = pickup()
+        current_pos = depot_1
+        navigate(current_pos, destination)
+        dropoff()
+        current_pos = destination
+        if boxes_delivered <= 3:
+            destination = depot_1
+        else:
+            destination  = depot_2
+        navigate(current_pos, destination)
+
+    # Go back to start
+    navigate(current_pos, start)
+    break
