@@ -13,7 +13,7 @@ S1 = Pin(21, Pin.IN, Pin.PULL_DOWN)
 S2 = Pin(20, Pin.IN, Pin.PULL_DOWN)
 S3 = Pin(19, Pin.IN, Pin.PULL_DOWN)
 S4 = Pin(18, Pin.IN, Pin.PULL_DOWN)
-button = Pin(22, Pin.IN, Pin.PULL_DOWN)
+#button = Pin(22, Pin.IN, Pin.PULL_DOWN)
 on = 0
 # Nav_Grid is in [N, E, S, W]
 Nav_Grid = [
