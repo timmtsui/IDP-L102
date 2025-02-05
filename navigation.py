@@ -1,46 +1,55 @@
-
 import matplotlib.pyplot as plt
 import numpy as np
 import heapq
 
-# Define the navigation grid
-Nav_Grid = [
-    [[0,1,1,0] , [0,1,0,1] , [0,1,1,1] , [0,1,1,1] , [0,0,1,1]],
-    [[1,0,1,0] , [0,1,0,0] , [1,0,1,1] , [1,0,0,0] , [1,0,1,0]],
-    [[1,1,1,0] , [0,1,0,1] , [1,1,0,1] , [0,1,1,1] , [1,0,1,1]],
-    [[1, 0, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0], [1, 0, 0, 0], [1, 0, 1, 0]],
-    [[1, 1, 1, 0], [1, 1, 0, 1], [0, 1, 1, 1], [0, 1, 0, 1], [1, 0, 1, 1]],
-    [[1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0]]
-]
-
-
-def visualize_nav_grid(nav_grid):
-    rows, cols = len(nav_grid), len(nav_grid[0])
-    fig, ax = plt.subplots(figsize=(cols, rows))
-    ax.set_xlim(-0.5, cols - 0.5)
-    ax.set_ylim(-0.5, rows - 0.5)
-    ax.set_xticks(np.arange(cols)-0.5, minor=True)
-    ax.set_yticks(np.arange(rows)-0.5, minor=True)
-    ax.grid(which='minor', color='black', linestyle='-', linewidth=1)
-    ax.tick_params(bottom=False, left=False, labelbottom=False, labelleft=False)
-    
-    for r in range(rows):
-        for c in range(cols):
-            n, e, s, w = nav_grid[r][c]
-            if n and r > 0:
-                ax.plot([c, c], [r, r-1], 'b-', linewidth=2)
-            if e and c < cols - 1:
-                ax.plot([c, c+1], [r, r], 'b-', linewidth=2)
-            if s and r < rows - 1:
-                ax.plot([c, c], [r, r+1], 'b-', linewidth=2)
-            if w and c > 0:
-                ax.plot([c, c-1], [r, r], 'b-', linewidth=2)
-    
-    plt.gca().invert_yaxis()
-    plt.show()
-
 def heuristic(a, b):
     return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+def get_expected_sensors(approach_dir, junction_config):
+    if sum(junction_config) == 3:  # T-junctions or crossroads
+        # compass = ["N","E","S","W"]
+        compass = [0,90,180,270]
+        nulljunc = None
+        for i in range(0,3):
+            if junction_config[i] == 0:
+                nulljunc = compass[i]
+
+        print("nulljunc",nulljunc)
+        print("juncon",junction_config)
+        print("approachdir",approach_dir)
+        
+        if nulljunc is not None:
+            relative_orientation = (approach_dir - nulljunc) % 360
+            print("relor",relative_orientation)
+            if relative_orientation == 0:
+                # Approach from front
+                return [1, 1, 1, 1]
+            elif relative_orientation == 90:
+                # Right T
+                return [0, 0, 1, 1]
+            elif relative_orientation == 270:
+                # Left T
+                return [1, 1, 0, 0]
+            
+
+    if junction_config[0] != junction_config [2] and sum(junction_config) == 2:
+        pass
+    return [0,0,0,0]  # Default straight-line behavior
+
+def get_turn_direction(prev, current, next):
+    if not next:
+        return 'Straight'
+    r, c = current
+    nr, nc = next
+    if nr > r:
+        return 'Straight' if prev[0] < r else ('Right' if prev[1] < c else 'Left')
+    if nr < r:
+        return 'Straight' if prev[0] > r else ('Right' if prev[1] > c else 'Left')
+    if nc > c:
+        return 'Straight' if prev[1] < c else ('Right' if prev[0] > r else 'Left')
+    if nc < c:
+        return 'Straight' if prev[1] > c else ('Right' if prev[0] < r else 'Left')
+    return 'Straight'
 
 def astar(nav_grid, start, end):
     rows, cols = len(nav_grid), len(nav_grid[0])
@@ -60,8 +69,28 @@ def astar(nav_grid, start, end):
                 current = came_from[current]
             path.append(start)
             path.reverse()
-            return path
-        
+            
+            waypoints = []
+            for i in range(len(path)):
+                prev = path[i-1] if i > 0 else None
+                curr = path[i]
+                nxt = path[i+1] if i < len(path)-1 else None
+                
+                if prev:
+                    direction = get_turn_direction(prev, curr, nxt)
+                else:
+                    direction = 'Straight'
+                #["W","E","S","N"]
+                approach_dir = 0 if prev and prev[0] > curr[0] else \
+                               180 if prev and prev[0] < curr[0] else \
+                               90 if prev and prev[1] < curr[1] else \
+                               270 if prev and prev[1] > curr[1] else ''
+                
+                expected_sensors = get_expected_sensors(approach_dir, nav_grid[curr[0]][curr[1]])
+                waypoints.append((curr, expected_sensors, direction))
+            
+            return waypoints
+    
         r, c = current
         neighbors = []
         directions = nav_grid[r][c]
@@ -84,12 +113,16 @@ def astar(nav_grid, start, end):
     
     return []
 
+# Define the navigation grid
+Nav_Grid = [
+    [[0,1,1,0] , [0,1,0,1] , [0,1,1,1] , [0,1,1,1] , [0,0,1,1]],
+    [[1,0,1,0] , [0,1,0,0] , [1,0,1,1] , [1,0,0,0] , [1,0,1,0]],
+    [[1,1,1,0] , [0,1,0,1] , [1,1,0,1] , [0,1,1,1] , [1,0,1,1]],
+    [[1, 0, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0], [1, 0, 0, 0], [1, 0, 1, 0]],
+    [[1, 1, 1, 0], [1, 1, 0, 1], [0, 1, 1, 1], [0, 1, 0, 1], [1, 0, 1, 1]],
+    [[1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0]]
+]
 
-# Example usage
-start = (5, 4)
-end = (1, 1)
-path = astar(Nav_Grid, start, end)
 
-# Visualize the grid
-#visualize_nav_grid(Nav_Grid)
+
 
