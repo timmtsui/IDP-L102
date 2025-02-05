@@ -36,13 +36,34 @@ def heuristic(a, b):
     return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
 def get_expected_sensors(approach_dir, junction_config):
-    if sum(junction_config) > 2:  # T-junctions or crossroads
-        if approach_dir == 'S':
-            return [1,1,1,1]
-        if approach_dir == 'W':
-            return [0,0,1,1]
-        if approach_dir == 'E':
-            return [1,1,0,0]
+    if sum(junction_config) == 3:  # T-junctions or crossroads
+        # compass = ["N","E","S","W"]
+        compass = [0,90,180,270]
+        nulljunc = None
+        for i in range(0,3):
+            if junction_config[i] == 0:
+                nulljunc = compass[i]
+
+        print("nulljunc",nulljunc)
+        print("juncon",junction_config)
+        print("approachdir",approach_dir)
+        
+        if nulljunc is not None:
+            relative_orientation = (approach_dir - nulljunc) % 360
+            print("relor",relative_orientation)
+            if relative_orientation == 0:
+                # Approach from front
+                return [1, 1, 1, 1]
+            elif relative_orientation == 90:
+                # Right T
+                return [0, 0, 1, 1]
+            elif relative_orientation == 270:
+                # Left T
+                return [1, 1, 0, 0]
+            
+
+    if junction_config[0] != junction_config [2] and sum(junction_config) == 2:
+        pass
     return [0,0,0,0]  # Default straight-line behavior
 
 def get_turn_direction(prev, current, next):
@@ -89,11 +110,11 @@ def astar(nav_grid, start, end):
                     direction = get_turn_direction(prev, curr, nxt)
                 else:
                     direction = 'Straight'
-                
-                approach_dir = 'N' if prev and prev[0] > curr[0] else \
-                               'S' if prev and prev[0] < curr[0] else \
-                               'E' if prev and prev[1] < curr[1] else \
-                               'W' if prev and prev[1] > curr[1] else ''
+                #["W","E","S","N"]
+                approach_dir = 0 if prev and prev[0] > curr[0] else \
+                               180 if prev and prev[0] < curr[0] else \
+                               90 if prev and prev[1] < curr[1] else \
+                               270 if prev and prev[1] > curr[1] else ''
                 
                 expected_sensors = get_expected_sensors(approach_dir, nav_grid[curr[0]][curr[1]])
                 waypoints.append((curr, expected_sensors, direction))
@@ -140,3 +161,5 @@ print("Waypoints:", waypoints)
 
 # Visualize the grid
 visualize_nav_grid(Nav_Grid, waypoints)
+
+
