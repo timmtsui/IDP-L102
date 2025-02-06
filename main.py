@@ -74,7 +74,7 @@ def get_expected_sensors(approach_dir, junction_config):
     compass = [0,90,180,270]
     if sum(junction_config) == 3:  # T-junctions or crossroads
         nulljunc = None
-        for i in range(0,3):
+        for i in range(0,4):
             if junction_config[i] == 0:
                 nulljunc = compass[i]
 
@@ -98,7 +98,7 @@ def get_expected_sensors(approach_dir, junction_config):
 
     if junction_config[0] != junction_config [2] and sum(junction_config) == 2:
         onejunc = None
-        for i in range(0,3):
+        for i in range(0,4):
             print(type(approach_dir))
             if junction_config[i] == 1 and compass[i] != ( approach_dir + 180 ) % 360:
                 onejunc = compass[i]

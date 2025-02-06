@@ -40,7 +40,7 @@ def get_expected_sensors(approach_dir, junction_config):
     if sum(junction_config) == 3:  # T-junctions or crossroads
         # compass = ["N","E","S","W"]
         nulljunc = None
-        for i in range(0,3):
+        for i in range(0,4):
             if junction_config[i] == 0:
                 nulljunc = compass[i]
 
@@ -64,7 +64,7 @@ def get_expected_sensors(approach_dir, junction_config):
 
     if junction_config[0] != junction_config [2] and sum(junction_config) == 2:
         onejunc = None
-        for i in range(0,3):
+        for i in range(0,4):
             print(type(approach_dir))
             if junction_config[i] == 1 and compass[i] != ( approach_dir + 180 ) % 360:
                 onejunc = compass[i]
@@ -138,7 +138,7 @@ def astar(nav_grid, start, end):
             for i in waypoints:
                 print(i)
                 if i[1] == [0,0,0,0]:
-                    waypoints.remove(i)
+                    #waypoints.remove(i)
                     pass
 
             return waypoints
@@ -176,8 +176,8 @@ Nav_Grid = [
 ]
 
 # Example usage
-start = (0, 0)
-end = (5, 4)
+start = (5, 2)
+end = (1, 1)
 waypoints = astar(Nav_Grid, start, end)
 print("Waypoints:", waypoints)
 
