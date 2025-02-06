@@ -154,8 +154,8 @@ Nav_Grid = [
 ]
 
 # Example usage
-start = (1, 1)
-end = (5, 4)
+start = (0, 0)
+end = (2, 1)
 waypoints = astar(Nav_Grid, start, end)
 print("Waypoints:", waypoints)
 
