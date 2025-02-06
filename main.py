@@ -167,9 +167,10 @@ def astar(nav_grid, start, end):
                 expected_sensors = get_expected_sensors(approach_dir, nav_grid[curr[0]][curr[1]])
                 waypoints.append((curr, expected_sensors, direction))
             
-            for i in range(len(waypoints)):
-                if waypoints[i][1] == [0,0,0,0]:
+            for i in waypoints:
+                if i[1] == [0,0,0,0]:
                     waypoints.remove(i)
+                    pass
             
             return waypoints
     

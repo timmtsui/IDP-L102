@@ -138,7 +138,7 @@ def astar(nav_grid, start, end):
             for i in waypoints:
                 print(i)
                 if i[1] == [0,0,0,0]:
-                    #waypoints.remove(i)
+                    waypoints.remove(i)
                     pass
 
             return waypoints
