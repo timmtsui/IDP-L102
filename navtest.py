@@ -36,9 +36,9 @@ def heuristic(a, b):
     return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
 def get_expected_sensors(approach_dir, junction_config):
+    compass = [0,90,180,270]
     if sum(junction_config) == 3:  # T-junctions or crossroads
         # compass = ["N","E","S","W"]
-        compass = [0,90,180,270]
         nulljunc = None
         for i in range(0,3):
             if junction_config[i] == 0:
@@ -63,6 +63,22 @@ def get_expected_sensors(approach_dir, junction_config):
             
 
     if junction_config[0] != junction_config [2] and sum(junction_config) == 2:
+        onejunc = None
+        for i in range(0,3):
+            print(type(approach_dir))
+            if junction_config[i] == 1 and compass[i] != ( approach_dir + 180 ) % 360:
+                onejunc = compass[i]
+        if onejunc is not None:
+            relative_orientation = (approach_dir - onejunc) % 360
+            print("relor",relative_orientation)
+            if relative_orientation == 90:
+                # Right
+                return [1, 1, 0, 0]
+            elif relative_orientation == 270:
+                # Left
+                return [0, 0, 1, 1]
+
+
         pass
     return [0,0,0,0]  # Default straight-line behavior
 
@@ -114,7 +130,7 @@ def astar(nav_grid, start, end):
                 approach_dir = 0 if prev and prev[0] > curr[0] else \
                                180 if prev and prev[0] < curr[0] else \
                                90 if prev and prev[1] < curr[1] else \
-                               270 if prev and prev[1] > curr[1] else ''
+                               270 if prev and prev[1] > curr[1] else 0
                 
                 expected_sensors = get_expected_sensors(approach_dir, nav_grid[curr[0]][curr[1]])
                 waypoints.append((curr, expected_sensors, direction))
