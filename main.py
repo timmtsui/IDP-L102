@@ -28,16 +28,16 @@ class Motor:
         motor_left.off()
         motor_right.off()
         if angle<0:
-            motor_left.reverse(100)
+            motor_left.reverse(0)
             motor_right.forward(100)
-            sleep(angle*-0.009)
+            sleep(angle*-0.018)
             motor_left.off()
             motor_right.off()
             
         if angle>0:
             motor_left.forward(100)
-            motor_right.reverse(100)
-            sleep(angle*0.009)
+            motor_right.reverse(0)
+            sleep(angle*0.018)
             motor_left.off()
             motor_right.off()
             
@@ -51,17 +51,19 @@ def LineFollow():
         motor_right.forward(50)
         print("Move forward")
     elif S3.value() == 1:
-        motor_left.forward(50)
-        motor_right.forward(0)
+        motor_left.forward(100)
+        motor_right.reverse(100*0.75)
         print("Turn right")
+        sleep(0.05)
     else:
-        motor_left.forward(0)
-        motor_right.forward(50)
+        motor_left.reverse(100)
+        motor_right.forward(100*0.75)
         print("Turn left")
+        sleep(0.05)
 
 def move(speed, time):
     motor_left.forward(speed)
-    motor_right.forward(speed)
+    motor_right.forward(speed*0.75)
     sleep(time)
     motor_left.off()
     motor_right.off()
@@ -167,10 +169,10 @@ def astar(nav_grid, start, end):
                 expected_sensors = get_expected_sensors(approach_dir, nav_grid[curr[0]][curr[1]])
                 waypoints.append((curr, expected_sensors, direction))
             
+            waypoints.pop(0)
             for i in waypoints:
                 if i[1] == [0,0,0,0]:
                     waypoints.remove(i)
-                    pass
             
             return waypoints
     
@@ -228,10 +230,11 @@ Nav_Grid = [
 
 def navigate(start, end):
     waypoints = astar(Nav_Grid, start, end)
-    sense = [S1.value(), S2.value(), S3.value(), S4.value()]
+    
     
     while len(waypoints) > 0:
         # Line following when no junction detected
+        sense = [S1.value(), S2.value(), S3.value(), S4.value()]
         while sense[0] == 0 and sense[3] == 0:
             sense = [S1.value(), S2.value(), S3.value(), S4.value()]
             print(sense)
@@ -241,6 +244,7 @@ def navigate(start, end):
         # Sees junction
         print(sense, waypoints[0][1])
         if True:
+            move(0, 0.5)
             print("Correct junction detected")
             if waypoints[0][2] == "Straight":
                 move(50,1)
@@ -272,7 +276,7 @@ while True:
     
     
     #When start button is pressed
-    navigate((0,0), (2, 1))
+    navigate((0,2), (5, 4))
     break
 
     """
