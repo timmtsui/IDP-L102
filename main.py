@@ -155,6 +155,10 @@ def astar(nav_grid, start, end):
                 expected_sensors = get_expected_sensors(approach_dir, nav_grid[curr[0]][curr[1]])
                 waypoints.append((curr, expected_sensors, direction))
             
+            for i in range(len(waypoints)):
+                if waypoints[i][1] == [0,0,0,0]:
+                    waypoints.remove(i)
+            
             return waypoints
     
         r, c = current
@@ -229,10 +233,12 @@ def navigate(start, end):
                 move(50,1)
             elif waypoints[0][2] == "Right":
                 motor_left.turn(90)
+                sleep(1)
             elif waypoints[0][2] == "Left":
                 motor_right.turn(-90)
+                sleep(1)
             waypoints.pop(0)
-
+            
             for i in range(10):
                 LineFollow()
                 sleep(0.1)
@@ -250,10 +256,13 @@ def dropoff():
 
 
 while True:
+    
+    
     #When start button is pressed
-    move(50,2)
-    navigate(current_pos, depot_1)
+    navigate((0,0), (2, 1))
+    break
 
+    """
     while boxes_delivered < 8:
         destination = pickup()
         current_pos = depot_1
@@ -265,7 +274,9 @@ while True:
         else:
             destination  = depot_2
         navigate(current_pos, destination)
+    """
 
     # Go back to start
-    navigate(current_pos, start)
-    break
+    # navigate(current_pos, start)
+    # break
+
