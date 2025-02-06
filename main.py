@@ -98,7 +98,7 @@ def get_expected_sensors(approach_dir, junction_config):
                 return [1, 1, 0, 0]
             
 
-    if junction_config[0] != junction_config [2] and sum(junction_config) == 2:
+    if junction_config[0] != junction_config[2] and sum(junction_config) == 2:
         pass
     return [0,0,0,0]  # Default straight-line behavior
 
