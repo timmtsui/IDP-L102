@@ -23,21 +23,31 @@ class Motor:
     def reverse(self, speed):
         self.m1Dir.value(1)
         self.pwm1.duty_u16(int(65535*speed/100))
+
+    def speed(self, speed):
+        if speed > 0:
+            self.m1Dir.value(0) # Forward = 0
+        else:
+            self.m1Dir.value(1) # Reverse = 1
+        
+        self.pwm1.duty_u16(int(65535*speed/100)) # speed range 0-100 motor 1
         
     def turn(self, angle): # motor_left.turn is the same as motor_right.turn
         motor_left.off()
         motor_right.off()
         if angle<0:
-            motor_left.reverse(100)
-            motor_right.forward(100)
-            sleep(angle*-0.009)
+            # Left turn
+            motor_left.speed(0)
+            motor_right.speed(100)
+            sleep(angle*-0.018)
             motor_left.off()
             motor_right.off()
             
         if angle>0:
-            motor_left.forward(100)
-            motor_right.reverse(100)
-            sleep(angle*0.009)
+            # Right turn
+            motor_left.speed(100)
+            motor_right.speed(0)
+            sleep(angle*0.018)
             motor_left.off()
             motor_right.off()
             
@@ -47,24 +57,42 @@ class Motor:
 def LineFollow(): 
     # Will need to implement ghosting prevention
     if S2.value() == 0 and S3.value() == 0:
-        motor_left.forward(50)
-        motor_right.forward(50)
+        motor_left.speed(50)
+        motor_right.speed(50)
         print("Move forward")
     elif S3.value() == 1:
-        motor_left.forward(50)
-        motor_right.forward(0)
+        motor_left.speed(100)
+        motor_right.speed(-100*0.75)
         print("Turn right")
+        sleep(0.05)
     else:
-        motor_left.forward(0)
-        motor_right.forward(50)
+        motor_left.speed(-100)
+        motor_right.speed(100*0.75)
         print("Turn left")
+        sleep(0.05)
 
-def move(speed, time):
-    motor_left.forward(speed)
-    motor_right.forward(speed)
-    sleep(time)
+def blindstraight(speed, time):
+    motor_left.speed(speed)
+    motor_right.speed(speed*0.75)
+    senseall = [0, 0, 0 ,0]
+
+    for i in range(20):
+        sense = [S1.value(), S2.value(), S3.value(), S4.value()]
+        for j in range(4):
+            if sense[j] == 1:
+                senseall[j] += 1
+        sleep(time/20)
+
     motor_left.off()
     motor_right.off()
+
+    for i in range(4):
+        if senseall[i] >= 2: # more than 10% of the time
+            senseall[i] = 1
+        else:
+            senseall[i] = 0
+    
+    return senseall
 
 def heuristic(a, b):
     return abs(a[0] - b[0]) + abs(a[1] - b[1])
@@ -167,10 +195,10 @@ def astar(nav_grid, start, end):
                 expected_sensors = get_expected_sensors(approach_dir, nav_grid[curr[0]][curr[1]])
                 waypoints.append((curr, expected_sensors, direction))
             
+            waypoints.pop(0)
             for i in waypoints:
                 if i[1] == [0,0,0,0]:
                     waypoints.remove(i)
-                    pass
             
             return waypoints
     
@@ -215,9 +243,9 @@ boxes_delivered = 0
 
 # Nav_Grid is in [N, E, S, W]
 Nav_Grid = [
-    [[0,1,1,0] , [0,1,0,1] , [0,1,1,1] , [0,1,1,1] , [0,0,1,1]],
-    [[1,0,1,0] , [0,1,0,0] , [1,0,1,1] , [1,0,0,0] , [1,0,1,0]],
-    [[1,1,1,0] , [0,1,0,1] , [1,1,0,1] , [0,1,1,1] , [1,0,1,1]],
+    [[0, 1, 1, 0], [0, 1, 0, 1], [0, 1, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]],
+    [[1, 0, 1, 0], [0, 1, 0, 0], [1, 0, 1, 1], [1, 0, 0, 0], [1, 0, 1, 0]],
+    [[1, 1, 1, 0], [0, 1, 0, 1], [1, 1, 0, 1], [0, 1, 1, 1], [1, 0, 1, 1]],
     [[1, 0, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0], [1, 0, 0, 0], [1, 0, 1, 0]],
     [[1, 1, 1, 0], [1, 1, 0, 1], [0, 1, 1, 1], [0, 1, 0, 1], [1, 0, 1, 1]],
     [[1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0]]
@@ -227,10 +255,11 @@ Nav_Grid = [
 ### Main loop
 def navigate(start, end):
     waypoints = astar(Nav_Grid, start, end)
-    sense = [S1.value(), S2.value(), S3.value(), S4.value()]
+    
     
     while len(waypoints) > 0:
         # Line following when no junction detected
+        sense = [S1.value(), S2.value(), S3.value(), S4.value()]
         while sense[0] == 0 and sense[3] == 0:
             sense = [S1.value(), S2.value(), S3.value(), S4.value()]
             print(sense)
@@ -239,11 +268,15 @@ def navigate(start, end):
 
         # Sees junction
         print(sense, waypoints[0][1])
+<<<<<<< HEAD
 
+=======
+        junctionsense = blindstraight(30, 0.5)
+>>>>>>> 977a91b3a3499610498c202f824236c7538042f9
         if True:
             print("Correct junction detected")
             if waypoints[0][2] == "Straight":
-                move(50,1)
+                blindstraight(50,1)
             elif waypoints[0][2] == "Right":
                 motor_left.turn(90)
                 sleep(1)
@@ -268,9 +301,12 @@ def dropoff():
     return
 
 while True:
+<<<<<<< HEAD
     
+=======
+>>>>>>> 977a91b3a3499610498c202f824236c7538042f9
     #When start button is pressed
-    navigate((0,0), (2, 1))
+    navigate((0,2), (5, 4))
     break
 
     """
@@ -290,4 +326,3 @@ while True:
     # Go back to start
     # navigate(current_pos, start)
     # break
-
