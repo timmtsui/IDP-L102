@@ -32,9 +32,11 @@ class Motor:
         
         self.pwm1.duty_u16(int(65535*speed/100)) # speed range 0-100 motor 1
         
-    def turn(self, angle): # motor_left.turn is the same as motor_right.turn
+    def turn(self, angle, confirmation=False): # motor_left.turn is the same as motor_right.turn
         motor_left.off()
         motor_right.off()
+        if confirmation:
+            angle = angle * 0.75
         if angle<0:
             # Left turn
             motor_left.speed(0)
@@ -42,6 +44,11 @@ class Motor:
             sleep(angle*-0.018)
             motor_left.off()
             motor_right.off()
+
+            if confirmation:
+                while S3.value() == 0:
+                    motor_left.turn(-3)
+                    print("Turning left incrementally")
             
         if angle>0:
             # Right turn
@@ -50,6 +57,13 @@ class Motor:
             sleep(angle*0.018)
             motor_left.off()
             motor_right.off()
+
+            if confirmation:
+                while S2.value() == 0:
+                    motor_left.turn(3)
+                    print("Turning right incrementally")
+
+
             
         
 ### Functions
@@ -274,10 +288,10 @@ def navigate(start, end):
             if waypoints[0][2] == "Straight":
                 blindstraight(50,1)
             elif waypoints[0][2] == "Right":
-                motor_left.turn(90)
+                motor_left.turn(90, True)
                 sleep(1)
             elif waypoints[0][2] == "Left":
-                motor_right.turn(-90)
+                motor_right.turn(-90, True)
                 sleep(1)
             waypoints.pop(0)
             
@@ -305,13 +319,14 @@ def get_button(button_status):
     return button_status
     
 while True:
+    button_status = 0
     #When start button is pressed
     while button_status == 0:
         button_status = get_button(button_status)
     
-    navigate((0,2), (5, 4))
+    navigate((5, 4), (0, 2))
 
-    button_status = 0
+    break
 
     """
     while boxes_delivered < 8:
