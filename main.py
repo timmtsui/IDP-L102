@@ -4,6 +4,32 @@ from machine import Pin, PWM
 from time import sleep
 import heapq
 
+### Variables
+
+motor_left = Motor(7, 6)
+motor_right = Motor(4, 5)
+S1 = Pin(21, Pin.IN, Pin.PULL_DOWN)
+S2 = Pin(20, Pin.IN, Pin.PULL_DOWN)
+S3 = Pin(19, Pin.IN, Pin.PULL_DOWN)
+S4 = Pin(18, Pin.IN, Pin.PULL_DOWN)
+button = Pin(22, Pin.IN, Pin.PULL_DOWN)
+on = 0
+current_pos = (5,2)
+depot_1 = (5,4)
+depot_2  = (5, 0)
+start = (5, 2)
+boxes_delivered = 0
+
+# Nav_Grid is in [N, E, S, W]
+Nav_Grid = [
+    [[0, 1, 1, 0], [0, 1, 0, 1], [0, 1, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]],
+    [[1, 0, 1, 0], [0, 1, 0, 0], [1, 0, 1, 1], [1, 0, 0, 0], [1, 0, 1, 0]],
+    [[1, 1, 1, 0], [0, 1, 0, 1], [1, 1, 0, 1], [0, 1, 1, 1], [1, 0, 1, 1]],
+    [[1, 0, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0], [1, 0, 0, 0], [1, 0, 1, 0]],
+    [[1, 1, 1, 0], [1, 1, 0, 1], [0, 1, 1, 1], [0, 1, 0, 1], [1, 0, 1, 1]],
+    [[1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0]]
+]
+
 ### Classes
 
 class Motor:
@@ -224,33 +250,19 @@ def astar(nav_grid, start, end):
     
     return []
 
+def pickup():
+    return
 
-### Variables
+def dropoff():
+    return
 
-motor_left = Motor(7, 6)
-motor_right = Motor(4, 5)
-S1 = Pin(21, Pin.IN, Pin.PULL_DOWN)
-S2 = Pin(20, Pin.IN, Pin.PULL_DOWN)
-S3 = Pin(19, Pin.IN, Pin.PULL_DOWN)
-S4 = Pin(18, Pin.IN, Pin.PULL_DOWN)
-button = Pin(22, Pin.IN, Pin.PULL_DOWN)
-on = 0
-current_pos = (5,2)
-depot_1 = (5,4)
-depot_2  = (5, 0)
-start = (5, 2)
-boxes_delivered = 0
-
-# Nav_Grid is in [N, E, S, W]
-Nav_Grid = [
-    [[0, 1, 1, 0], [0, 1, 0, 1], [0, 1, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]],
-    [[1, 0, 1, 0], [0, 1, 0, 0], [1, 0, 1, 1], [1, 0, 0, 0], [1, 0, 1, 0]],
-    [[1, 1, 1, 0], [0, 1, 0, 1], [1, 1, 0, 1], [0, 1, 1, 1], [1, 0, 1, 1]],
-    [[1, 0, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0], [1, 0, 0, 0], [1, 0, 1, 0]],
-    [[1, 1, 1, 0], [1, 1, 0, 1], [0, 1, 1, 1], [0, 1, 0, 1], [1, 0, 1, 1]],
-    [[1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0]]
-]
-
+def get_button(button_status):
+    count = 0
+    if button.value() == 1:
+        while count < 20:
+            count += 1
+        return 1 - button_status # Returns toggled button status
+    return button_status
 
 ### Main loop
 def navigate(start, end):
@@ -290,19 +302,7 @@ def navigate(start, end):
 #handles movement and mechanism to pick up box
 # also calls qr code scan and returns drop off coordinates
 # should leave robot in N orientation away from junctions
-def pickup():
-    return
 
-def dropoff():
-    return
-
-def get_button(button_status):
-    count = 0
-    if button.value() != button_status:
-        count += 1
-        if count > 20: # Count needed to debounce the button
-            return 1 - button_status # Returns toggled button status
-    return button_status
     
 while True:
     #When start button is pressed
