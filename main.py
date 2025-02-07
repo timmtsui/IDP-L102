@@ -233,7 +233,7 @@ S1 = Pin(21, Pin.IN, Pin.PULL_DOWN)
 S2 = Pin(20, Pin.IN, Pin.PULL_DOWN)
 S3 = Pin(19, Pin.IN, Pin.PULL_DOWN)
 S4 = Pin(18, Pin.IN, Pin.PULL_DOWN)
-#button = Pin(22, Pin.IN, Pin.PULL_DOWN)
+button = Pin(22, Pin.IN, Pin.PULL_DOWN)
 on = 0
 current_pos = (5,2)
 depot_1 = (5,4)
@@ -268,11 +268,7 @@ def navigate(start, end):
 
         # Sees junction
         print(sense, waypoints[0][1])
-<<<<<<< HEAD
-
-=======
         junctionsense = blindstraight(30, 0.5)
->>>>>>> 977a91b3a3499610498c202f824236c7538042f9
         if True:
             print("Correct junction detected")
             if waypoints[0][2] == "Straight":
@@ -300,14 +296,22 @@ def pickup():
 def dropoff():
     return
 
-while True:
-<<<<<<< HEAD
+def get_button(button_status):
+    count = 0
+    if button.value() != button_status:
+        count += 1
+        if count > 20: # Count needed to debounce the button
+            return 1 - button_status # Returns toggled button status
+    return button_status
     
-=======
->>>>>>> 977a91b3a3499610498c202f824236c7538042f9
+while True:
     #When start button is pressed
+    while button_status == 0:
+        button_status = get_button(button_status)
+    
     navigate((0,2), (5, 4))
-    break
+
+    button_status = 0
 
     """
     while boxes_delivered < 8:

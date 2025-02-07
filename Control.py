@@ -1,1 +1,3 @@
-print(-270 % 360)
+butn = 1
+print(not butn)
+print("hi")
