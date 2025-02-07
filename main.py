@@ -4,31 +4,6 @@ from machine import Pin, PWM
 from time import sleep
 import heapq
 
-### Variables
-
-motor_left = Motor(7, 6)
-motor_right = Motor(4, 5)
-S1 = Pin(21, Pin.IN, Pin.PULL_DOWN)
-S2 = Pin(20, Pin.IN, Pin.PULL_DOWN)
-S3 = Pin(19, Pin.IN, Pin.PULL_DOWN)
-S4 = Pin(18, Pin.IN, Pin.PULL_DOWN)
-button = Pin(22, Pin.IN, Pin.PULL_DOWN)
-on = 0
-current_pos = (5,2)
-depot_1 = (5,4)
-depot_2  = (5, 0)
-start = (5, 2)
-boxes_delivered = 0
-
-# Nav_Grid is in [N, E, S, W]
-Nav_Grid = [
-    [[0, 1, 1, 0], [0, 1, 0, 1], [0, 1, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]],
-    [[1, 0, 1, 0], [0, 1, 0, 0], [1, 0, 1, 1], [1, 0, 0, 0], [1, 0, 1, 0]],
-    [[1, 1, 1, 0], [0, 1, 0, 1], [1, 1, 0, 1], [0, 1, 1, 1], [1, 0, 1, 1]],
-    [[1, 0, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0], [1, 0, 0, 0], [1, 0, 1, 0]],
-    [[1, 1, 1, 0], [1, 1, 0, 1], [0, 1, 1, 1], [0, 1, 0, 1], [1, 0, 1, 1]],
-    [[1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0]]
-]
 
 ### Classes
 
@@ -272,11 +247,39 @@ def dropoff():
 
 def get_button(button_status):
     count = 0
-    if button.value() == 1:
-        while count < 20:
-            count += 1
-        return 1 - button_status # Returns toggled button status
-    return button_status
+    if button.value() == 0:
+        """while count < 20:
+            count += button.value()"""
+        return 0 # Returns toggled button status
+    return 1
+
+
+### Variables
+
+motor_left = Motor(7, 6)
+motor_right = Motor(4, 5)
+S1 = Pin(21, Pin.IN, Pin.PULL_DOWN)
+S2 = Pin(20, Pin.IN, Pin.PULL_DOWN)
+S3 = Pin(19, Pin.IN, Pin.PULL_DOWN)
+S4 = Pin(18, Pin.IN, Pin.PULL_DOWN)
+button = Pin(22, Pin.IN, Pin.PULL_DOWN)
+on = 0
+current_pos = (5,2)
+depot_1 = (5,4)
+depot_2  = (5, 0)
+start = (5, 2)
+boxes_delivered = 0
+
+# Nav_Grid is in [N, E, S, W]
+Nav_Grid = [
+    [[0, 1, 1, 0], [0, 1, 0, 1], [0, 1, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]],
+    [[1, 0, 1, 0], [0, 1, 0, 0], [1, 0, 1, 1], [1, 0, 0, 0], [1, 0, 1, 0]],
+    [[1, 1, 1, 0], [0, 1, 0, 1], [1, 1, 0, 1], [0, 1, 1, 1], [1, 0, 1, 1]],
+    [[1, 0, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0], [1, 0, 0, 0], [1, 0, 1, 0]],
+    [[1, 1, 1, 0], [1, 1, 0, 1], [0, 1, 1, 1], [0, 1, 0, 1], [1, 0, 1, 1]],
+    [[1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0]]
+]
+
 
 ### Main loop
 def navigate(start, end):
@@ -295,8 +298,12 @@ def navigate(start, end):
         # Sees junction
         print(sense, waypoints[0][1])
         junctionsense = blindstraight(30, 0.5)
-        if True:
+        if junctionsense == waypoints[0][1]: # Correct junction detected
             print("Correct junction detected")
+        else:
+            print("Incorrect junction detected")
+        
+        if True:
             if waypoints[0][2] == "Straight":
                 blindstraight(50,1)
             elif waypoints[0][2] == "Right":
@@ -320,13 +327,13 @@ def navigate(start, end):
     
 while True:
     button_status = 0
+    print(button.value())
     #When start button is pressed
-    while button_status == 0:
+    while button_status == 1:
         button_status = get_button(button_status)
     
+    #blindstraight(1, 1)
     navigate((5, 4), (0, 2))
-
-    break
 
     """
     while boxes_delivered < 8:
