@@ -225,7 +225,6 @@ Nav_Grid = [
 
 
 ### Main loop
-
 def navigate(start, end):
     waypoints = astar(Nav_Grid, start, end)
     sense = [S1.value(), S2.value(), S3.value(), S4.value()]
@@ -240,6 +239,7 @@ def navigate(start, end):
 
         # Sees junction
         print(sense, waypoints[0][1])
+
         if True:
             print("Correct junction detected")
             if waypoints[0][2] == "Straight":
@@ -267,9 +267,7 @@ def pickup():
 def dropoff():
     return
 
-
 while True:
-    
     
     #When start button is pressed
     navigate((0,0), (2, 1))
