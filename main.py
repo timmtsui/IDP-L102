@@ -265,7 +265,7 @@ S2 = Pin(20, Pin.IN, Pin.PULL_DOWN)
 S3 = Pin(19, Pin.IN, Pin.PULL_DOWN)
 S4 = Pin(18, Pin.IN, Pin.PULL_DOWN)
 button = Pin(22, Pin.IN, Pin.PULL_DOWN)
-servo_pin = machine.Pin(15)
+servo_pin = Pin(15)
 servo = PWM(servo_pin)
 # Servo at 180 deg
 max_duty = 7864
@@ -339,9 +339,8 @@ def navigate(start, end):
     
 while True:
     
-    #blindstraight(1, 1)
-    #navigate((5, 4), (0, 2))
-    servo.
+    blindstraight(1, 1)
+    navigate((5, 4), (0, 2))
 
     """
     while boxes_delivered < 8:
