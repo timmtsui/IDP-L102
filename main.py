@@ -240,6 +240,8 @@ def astar(nav_grid, start, end):
     return []
 
 def pickup():
+    # LOWER FORKLIFT
+
     return
 
 def dropoff():
@@ -263,6 +265,16 @@ S2 = Pin(20, Pin.IN, Pin.PULL_DOWN)
 S3 = Pin(19, Pin.IN, Pin.PULL_DOWN)
 S4 = Pin(18, Pin.IN, Pin.PULL_DOWN)
 button = Pin(22, Pin.IN, Pin.PULL_DOWN)
+servo_pin = machine.Pin(15)
+servo = PWM(servo_pin)
+# Servo at 180 deg
+max_duty = 7864
+# Servo at 0 deg
+min_duty = 1802
+frequency = 50
+
+
+
 on = 0
 current_pos = (5,2)
 depot_1 = (5,4)
@@ -326,14 +338,10 @@ def navigate(start, end):
 
     
 while True:
-    button_status = 0
-    print(button.value())
-    #When start button is pressed
-    while button_status == 1:
-        button_status = get_button(button_status)
     
     #blindstraight(1, 1)
-    navigate((5, 4), (0, 2))
+    #navigate((5, 4), (0, 2))
+    servo.
 
     """
     while boxes_delivered < 8:
