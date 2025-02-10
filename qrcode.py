@@ -43,17 +43,20 @@ def scan():
         
         if message_length == 0:
             # No data to process, continue to the next iteration
+            print("No data")
             return None
         
         # Try to decode the message as a UTF-8 string
         try:
             message_string = bytearray(message_bytes[0:message_length]).decode("utf-8")
-            return message_string
+            return message_string[0] # First character is the location
         except Exception as e:
-            return "Error: Couldn't decode as UTF-8:", e
+            print("Error: Couldn't decode as UTF-8:", e)
+            return None
     
     except Exception as e:
-        return "Error: Error reading from I2C:", e
+        print("Error: Error reading from I2C:", e)
+        return None
 
 
 while True:
