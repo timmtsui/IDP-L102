@@ -22,16 +22,15 @@ TINY_CODE_READER_I2C_BYTE_COUNT = struct.calcsize(TINY_CODE_READER_I2C_FORMAT)
 
 # Set up for the Pico, pin numbers will vary according to your setup.
 i2c = machine.I2C(1,
-                  scl=machine.Pin(15),  # yellow
-                  sda=machine.Pin(14),  # blue
+                  scl=machine.Pin(11),  # yellow
+                  sda=machine.Pin(10),  # blue
                   freq=400000)
 
 print(i2c.scan())
 
 # Keep looping and reading the sensor results until we get a QR code
-while True:
-    sleep(TINY_CODE_READER_DELAY)
-    
+
+def scan():
     try:
         # Read data from the I2C device
         read_data = i2c.readfrom(TINY_CODE_READER_I2C_ADDRESS, TINY_CODE_READER_I2C_BYTE_COUNT)
@@ -44,15 +43,20 @@ while True:
         
         if message_length == 0:
             # No data to process, continue to the next iteration
-            continue
+            return None
         
         # Try to decode the message as a UTF-8 string
         try:
             message_string = bytearray(message_bytes[0:message_length]).decode("utf-8")
-            print('barcode:', message_string)
+            return message_string
         except Exception as e:
-            print("Couldn't decode as UTF-8:", e)
+            return "Error: Couldn't decode as UTF-8:", e
     
     except Exception as e:
-        print("Error reading from I2C:", e)
+        return "Error: Error reading from I2C:", e
 
+
+while True:
+    sleep(TINY_CODE_READER_DELAY)
+    
+    print(scan())
