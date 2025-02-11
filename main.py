@@ -70,21 +70,21 @@ class Motor:
         
 ### Functions
 
-def LineFollow(): 
+def LineFollow(ratio=1): 
     # Will need to implement ghosting prevention
     if S2.value() == 0 and S3.value() == 0:
-        motor_left.speed(50)
-        motor_right.speed(50)
-        print("Move forward")
+        motor_left.speed(50*ratio)
+        motor_right.speed(50*ratio)
+        #print("Move forward")
     elif S3.value() == 1:
-        motor_left.speed(100)
-        motor_right.speed(-100*0.75)
-        print("Turn right")
+        motor_left.speed(100*ratio)
+        motor_right.speed(-100*0.75*ratio)
+        #print("Turn right")
         sleep(0.05)
     else:
-        motor_left.speed(-100)
-        motor_right.speed(100*0.75)
-        print("Turn left")
+        motor_left.speed(-100*ratio)
+        motor_right.speed(100*0.75*ratio)
+        #print("Turn left")
         sleep(0.05)
 
 def blindstraight(speed, time):
@@ -213,7 +213,7 @@ def astar(nav_grid, start, end):
             
             waypoints.pop(0)
             for i in waypoints:
-                if i[1] == [0,0,0,0]:
+                if i[1] == [0,0,0,0] and i[0] not in addresses.values():
                     waypoints.remove(i)
             
             return waypoints
@@ -254,7 +254,7 @@ def get_button(button_status):
 
 ### Variables
 
-addresses = {"A": (3,1), "B": (3,3), "C": (1,1), "D":(1,3)}
+addresses = {"A": (3,1), "B": (3,3), "C": (1,1), "D":(1,3), "D1": (5, 4), "D2": (5, 0)}
 
 motor_left = Motor(7, 6)
 motor_right = Motor(4, 5)
@@ -301,15 +301,17 @@ def pickup():
     while scanned == False:
         scanned = scan()
     if scanned != None:
-     addr = addresses[scanned]
-    return addr
+        addr = addresses[scanned]
+        return addr
 
 ### Main loop
 def navigate(start, end):
     waypoints = astar(Nav_Grid, start, end)
+    print(waypoints)
     
     
-    while len(waypoints) > 1:
+    while len(waypoints) > 0:
+        print("Print123")
         # Line following when no junction detected
         sense = [S1.value(), S2.value(), S3.value(), S4.value()]
         while sense[0] == 0 and sense[3] == 0:
@@ -335,7 +337,11 @@ def navigate(start, end):
             elif waypoints[0][2] == "Left":
                 motor_right.turn(-90, True)
                 sleep(1)
-            waypoints.pop(0)
+
+            if any([True for k,v in addresses.items() if v == waypoints[0][0]]):
+                break
+            else:
+                waypoints.pop(0)
             
             for i in range(10):
                 LineFollow()
@@ -344,16 +350,22 @@ def navigate(start, end):
         sleep(0.1)
         
     if any([True for k,v in addresses.items() if v == waypoints[0][0]]):
-        sense = [S1.value(), S2.value(), S3.value(), S4.value()]
+        print("Something")
+        """sense = [S1.value(), S2.value(), S3.value(), S4.value()]
         while sense[0] == 0 and sense[3] == 0:
             sense = [S1.value(), S2.value(), S3.value(), S4.value()]
             print(sense)
             LineFollow()
-            sleep(0.05)
+            sleep(0.05)"""
 
     
         dropoff()
-        blindstraight(-50,1)
+        """sense = [S1.value(), S2.value(), S3.value(), S4.value()]
+        while sense[0] == 0 and sense[3] == 0:
+            sense = [S1.value(), S2.value(), S3.value(), S4.value()]
+            print(sense)
+            LineFollow(-1)
+            sleep(0.05)
         
         if waypoints[0][0] != depot_1:
             dir = astar(Nav_Grid, waypoints[0][0], depot_1)
@@ -362,8 +374,8 @@ def navigate(start, end):
             elif dir[0][2] == "Right":
                 motor_left.turn(-90, True)
 
-        global current_pos
-        current_pos = dir[1][0]
+            global current_pos
+            current_pos = dir[1][0]"""
         
         
     
@@ -377,8 +389,9 @@ def navigate(start, end):
     
 while True:
     
-    blindstraight(1, 1)
-    navigate((5, 4), (0, 2))
+    blindstraight(50, 1)
+    navigate((5, 2), (3, 1))
+    print("Initial nav finished")
 
 
     while boxes_delivered < 4:

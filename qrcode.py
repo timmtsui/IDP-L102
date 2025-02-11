@@ -26,7 +26,7 @@ i2c = machine.I2C(1,
                   sda=machine.Pin(10),  # blue
                   freq=400000)
 
-print(i2c.scan())
+# print(i2c.scan())
 
 # Keep looping and reading the sensor results until we get a QR code
 
@@ -57,9 +57,3 @@ def scan():
     except Exception as e:
         print("Error: Error reading from I2C:", e)
         return None
-
-
-while True:
-    sleep(TINY_CODE_READER_DELAY)
-    
-    print(scan())
