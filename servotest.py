@@ -14,7 +14,6 @@ half_duty = int(max_duty/2)
 frequency = 50
 servo.freq(frequency)
 
-
 try:
     while True:
         servo.duty_u16(3300)
