@@ -2,9 +2,9 @@ from machine import Pin, I2C
 from vl53l0x import VL53L0X
 
 print("setting up i2c")
-sda = Pin(16)
-scl = Pin(17)
-id = 0
+sda = Pin(18)
+scl = Pin(19)
+id = 1
 
 i2c = I2C(id=id, sda=sda, scl=scl)
 

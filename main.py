@@ -73,8 +73,8 @@ class Motor:
 def LineFollow(ratio=1): 
     # Will need to implement ghosting prevention
     if S2.value() == 0 and S3.value() == 0:
-        motor_left.speed(50*ratio)
-        motor_right.speed(50*ratio)
+        motor_left.speed(100*ratio)
+        motor_right.speed(100*ratio)
         #print("Move forward")
     elif S3.value() == 1:
         motor_left.speed(100)
@@ -241,7 +241,7 @@ def astar(nav_grid, start, end):
     return []
 
 def dropoff():
-    blindstraight(-50, 1)
+    blindstraight(-50, 2)
     return
 
 def get_button(button_status):
@@ -259,14 +259,14 @@ addresses = {"A": (3,1), "B": (3,3), "C": (1,1), "D":(1,3), "D1": (5, 4), "D2": 
 
 motor_left = Motor(7, 6)
 motor_right = Motor(4, 5)
-S1 = Pin(21, Pin.IN, Pin.PULL_DOWN)
-S2 = Pin(20, Pin.IN, Pin.PULL_DOWN)
-S3 = Pin(19, Pin.IN, Pin.PULL_DOWN)
-S4 = Pin(18, Pin.IN, Pin.PULL_DOWN)
-button = Pin(22, Pin.IN, Pin.PULL_DOWN)
+S1 = Pin(20, Pin.IN, Pin.PULL_DOWN)
+S2 = Pin(21, Pin.IN, Pin.PULL_DOWN)
+S3 = Pin(22, Pin.IN, Pin.PULL_DOWN)
+S4 = Pin(26, Pin.IN, Pin.PULL_DOWN)
+#button = Pin(22, Pin.IN, Pin.PULL_DOWN)
 # Set up PWM Pin for servo control
-servo_pin = Pin(15)
-servo = PWM(servo_pin)
+#servo_pin = Pin(15)
+#servo = PWM(servo_pin)
 # Set Duty Cycle for Different Angles
 max_duty = 7864
 min_duty = 1802
@@ -295,16 +295,25 @@ Nav_Grid = [
     [[1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0]]
 ]
 
-def pickup():
+def pickupscan():
     # LOWER FORKLIFT
-    scanned = False
+    scanned = None
     servo.duty_u16(servo_horizontal)
-    while scanned == False:
+    count = 0
+    while count < 100:
+        LineFollow()
         scanned = scan()
-    if scanned != None:
-        addr = addresses[scanned]
-        return (3, 1)
-    return (3, 1)
+        if scanned != None:
+            addr = addresses[scanned]
+            print("Sucessfully scanned box: ", addr)
+            return addr
+        if count % 10 == 0:
+            blindstraight(-50,3)
+            print("reversing...")
+        count +=1
+        print("scanning attempt: ", count)
+    print("Scanning failed")
+    return (3,2) #Tries to scan 100 times and if not sucessful then just delivers box to nearest depot
 
 ### Main loop
 def navigate(start, end, reverse_first=True):
@@ -325,7 +334,7 @@ def navigate(start, end, reverse_first=True):
         sense = [S1.value(), S2.value(), S3.value(), S4.value()]
         while sense[0] == 0 and sense[3] == 0:
             sense = [S1.value(), S2.value(), S3.value(), S4.value()]
-            #print(sense)
+            print(sense)
             if reverse_first:
                 LineFollow(-1)
             else:
@@ -363,38 +372,9 @@ def navigate(start, end, reverse_first=True):
         sleep(0.1)
         
     if any([True for k,v in addresses.items() if v == waypoints[0][0]]):
-        print("Something")
-        """sense = [S1.value(), S2.value(), S3.value(), S4.value()]
-        while sense[0] == 0 and sense[3] == 0:
-            sense = [S1.value(), S2.value(), S3.value(), S4.value()]
-            print(sense)
-            LineFollow()
-            sleep(0.05)"""
-
-    
+        print("Arrived at a destination, initialising dropoff...")  
         dropoff()
-        """sense = [S1.value(), S2.value(), S3.value(), S4.value()]
-        while sense[0] == 0 and sense[3] == 0:
-            sense = [S1.value(), S2.value(), S3.value(), S4.value()]
-            print(sense)
-            LineFollow(-1)
-            sleep(0.05)
         
-        if waypoints[0][0] != depot_1:
-            dir = astar(Nav_Grid, waypoints[0][0], depot_1)
-            if dir[0][2] == "Left":
-                motor_left.turn(90, True)
-            elif dir[0][2] == "Right":
-                motor_left.turn(-90, True)
-
-            global current_pos
-            current_pos = dir[1][0]"""
-        
-        
-    
-        
-       
-
 #handles movement and mechanism to pick up box
 # also calls qr code scan and returns drop off coordinates
 # should leave robot in N orientation away from junctions
@@ -402,13 +382,20 @@ def navigate(start, end, reverse_first=True):
     
 while True:
     
-    blindstraight(50, 1)
+    """blindstraight(50, 1)
     navigate((3, 0), (1, 1), False)
     print("Initial nav finished")
 
     navigate((1, 1), depot_1)
-    break
-    while boxes_delivered < 4:
+    break"""
+
+    print(scan())
+    sleep(0.1)
+    #pickupscan()
+
+    #sleep(5)
+
+    """while boxes_delivered < 4:
         current_pos = depot_1
         destination = pickup()
         navigate(current_pos, destination)
@@ -418,7 +405,7 @@ while True:
         else:
             destination  = start
 
-        navigate(current_pos, destination)
+        navigate(current_pos, destination)"""
 
     # Go back to start
     # navigate(current_pos, start)
