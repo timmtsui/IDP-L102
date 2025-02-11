@@ -209,7 +209,7 @@ def astar(nav_grid, start, end):
                                270 if prev and prev[1] > curr[1] else 0
                 
                 expected_sensors = get_expected_sensors(approach_dir, nav_grid[curr[0]][curr[1]])
-                waypoints.append((curr, expected_sensors, direction))
+                waypoints.append([curr, expected_sensors, direction])
             
             waypoints.pop(0)
             for i in waypoints:
@@ -241,6 +241,7 @@ def astar(nav_grid, start, end):
     return []
 
 def dropoff():
+    blindstraight(-50, 1)
     return
 
 def get_button(button_status):
@@ -302,11 +303,19 @@ def pickup():
         scanned = scan()
     if scanned != None:
         addr = addresses[scanned]
-        return addr
+        return (3, 1)
+    return (3, 1)
 
 ### Main loop
-def navigate(start, end):
+def navigate(start, end, reverse_first=True):
     waypoints = astar(Nav_Grid, start, end)
+    print(waypoints)
+    if reverse_first:
+        waypoints[0][1].reverse()
+        if waypoints[0][2] == "Right":
+            waypoints[0][2] = "Left"
+        elif waypoints[0][2] == "Left":
+            waypoints[0][2] = "Right"
     print(waypoints)
     
     
@@ -316,11 +325,15 @@ def navigate(start, end):
         sense = [S1.value(), S2.value(), S3.value(), S4.value()]
         while sense[0] == 0 and sense[3] == 0:
             sense = [S1.value(), S2.value(), S3.value(), S4.value()]
-            print(sense)
-            LineFollow()
+            #print(sense)
+            if reverse_first:
+                LineFollow(-1)
+            else:
+                LineFollow()
             sleep(0.05)
 
         # Sees junction
+        reverse_first = False
         print(sense, waypoints[0][1])
         junctionsense = blindstraight(30, 0.5)
         if junctionsense == waypoints[0][1]: # Correct junction detected
@@ -390,10 +403,11 @@ def navigate(start, end):
 while True:
     
     blindstraight(50, 1)
-    navigate((5, 2), (3, 1))
+    navigate((5, 2), (3, 1), False)
     print("Initial nav finished")
 
-
+    navigate((3, 1), depot_1)
+    break
     while boxes_delivered < 4:
         current_pos = depot_1
         destination = pickup()
