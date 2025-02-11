@@ -77,13 +77,13 @@ def LineFollow(ratio=1):
         motor_right.speed(50*ratio)
         #print("Move forward")
     elif S3.value() == 1:
-        motor_left.speed(100*ratio)
-        motor_right.speed(-100*0.75*ratio)
+        motor_left.speed(100)
+        motor_right.speed(-100*0.75)
         #print("Turn right")
         sleep(0.05)
     else:
-        motor_left.speed(-100*ratio)
-        motor_right.speed(100*0.75*ratio)
+        motor_left.speed(-100)
+        motor_right.speed(100*0.75)
         #print("Turn left")
         sleep(0.05)
 
@@ -356,9 +356,9 @@ def navigate(start, end, reverse_first=True):
             else:
                 waypoints.pop(0)
             
-            for i in range(10):
+            for i in range(5):
                 LineFollow()
-                sleep(0.1)
+                sleep(0.05)
 
         sleep(0.1)
         
@@ -403,10 +403,10 @@ def navigate(start, end, reverse_first=True):
 while True:
     
     blindstraight(50, 1)
-    navigate((5, 2), (3, 1), False)
+    navigate((3, 0), (1, 1), False)
     print("Initial nav finished")
 
-    navigate((3, 1), depot_1)
+    navigate((1, 1), depot_1)
     break
     while boxes_delivered < 4:
         current_pos = depot_1
