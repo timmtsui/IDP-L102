@@ -3,6 +3,7 @@
 from machine import Pin, PWM
 from time import sleep
 import heapq
+from qrcode import scan
 
 
 ### Classes
@@ -239,10 +240,7 @@ def astar(nav_grid, start, end):
     
     return []
 
-def pickup():
-    # LOWER FORKLIFT
 
-    return
 
 def dropoff():
     return
@@ -258,6 +256,8 @@ def get_button(button_status):
 
 ### Variables
 
+addresses = {"A": (3,1), "B": (3,3), "C": (1,1), "D":(1,3)}
+
 motor_left = Motor(7, 6)
 motor_right = Motor(4, 5)
 S1 = Pin(21, Pin.IN, Pin.PULL_DOWN)
@@ -265,15 +265,18 @@ S2 = Pin(20, Pin.IN, Pin.PULL_DOWN)
 S3 = Pin(19, Pin.IN, Pin.PULL_DOWN)
 S4 = Pin(18, Pin.IN, Pin.PULL_DOWN)
 button = Pin(22, Pin.IN, Pin.PULL_DOWN)
+# Set up PWM Pin for servo control
 servo_pin = Pin(15)
 servo = PWM(servo_pin)
-# Servo at 180 deg
+# Set Duty Cycle for Different Angles
 max_duty = 7864
-# Servo at 0 deg
 min_duty = 1802
+servo_horizontal = 4833
+servo_carry = 3300
+servo_highest = 2800
+half_duty = int(max_duty/2)
+#Set PWM frequency
 frequency = 50
-
-
 
 on = 0
 current_pos = (5,2)
@@ -292,6 +295,16 @@ Nav_Grid = [
     [[1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0]]
 ]
 
+def pickup():
+    # LOWER FORKLIFT
+    scanned = False
+    servo.duty_u16(servo_horizontal)
+    while scanned == False:
+        scanned = scan()
+    global destination
+    destination = addresses[scanned]
+
+    return
 
 ### Main loop
 def navigate(start, end):
