@@ -240,8 +240,6 @@ def astar(nav_grid, start, end):
     
     return []
 
-
-
 def dropoff():
     return
 
@@ -284,6 +282,7 @@ depot_1 = (5,4)
 depot_2  = (5, 0)
 start = (5, 2)
 boxes_delivered = 0
+destination = (0,0)
 
 # Nav_Grid is in [N, E, S, W]
 Nav_Grid = [
@@ -301,17 +300,16 @@ def pickup():
     servo.duty_u16(servo_horizontal)
     while scanned == False:
         scanned = scan()
-    global destination
-    destination = addresses[scanned]
-
-    return
+    if scanned != None:
+     addr = addresses[scanned]
+    return addr
 
 ### Main loop
 def navigate(start, end):
     waypoints = astar(Nav_Grid, start, end)
     
     
-    while len(waypoints) > 0:
+    while len(waypoints) > 1:
         # Line following when no junction detected
         sense = [S1.value(), S2.value(), S3.value(), S4.value()]
         while sense[0] == 0 and sense[3] == 0:
@@ -344,6 +342,33 @@ def navigate(start, end):
                 sleep(0.1)
 
         sleep(0.1)
+        
+    if any([True for k,v in addresses.items() if v == waypoints[0][0]]):
+        sense = [S1.value(), S2.value(), S3.value(), S4.value()]
+        while sense[0] == 0 and sense[3] == 0:
+            sense = [S1.value(), S2.value(), S3.value(), S4.value()]
+            print(sense)
+            LineFollow()
+            sleep(0.05)
+
+    
+        dropoff()
+        blindstraight(-50,1)
+        
+        if waypoints[0][0] != depot_1:
+            dir = astar(Nav_Grid, waypoints[0][0], depot_1)
+            if dir[0][2] == "Left":
+                motor_left.turn(90, True)
+            elif dir[0][2] == "Right":
+                motor_left.turn(-90, True)
+
+        global current_pos
+        current_pos = dir[1][0]
+        
+        
+    
+        
+       
 
 #handles movement and mechanism to pick up box
 # also calls qr code scan and returns drop off coordinates
@@ -355,19 +380,18 @@ while True:
     blindstraight(1, 1)
     navigate((5, 4), (0, 2))
 
-    """
-    while boxes_delivered < 8:
-        destination = pickup()
+
+    while boxes_delivered < 4:
         current_pos = depot_1
+        destination = pickup()
         navigate(current_pos, destination)
-        dropoff()
-        current_pos = destination
+        
         if boxes_delivered <= 3:
             destination = depot_1
         else:
-            destination  = depot_2
+            destination  = start
+
         navigate(current_pos, destination)
-    """
 
     # Go back to start
     # navigate(current_pos, start)
