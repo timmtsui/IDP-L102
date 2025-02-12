@@ -16,7 +16,7 @@ servo.freq(frequency)
 
 try:
     while True:
-        servo.duty_u16(3300)
+        servo.duty_u16(servo_horizontal)
         sleep(1)
         """servo.duty_u16(3100)
         sleep(1)"""

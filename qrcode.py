@@ -23,13 +23,13 @@ TINY_CODE_READER_I2C_BYTE_COUNT = struct.calcsize(TINY_CODE_READER_I2C_FORMAT)
 # Set up for the Pico, pin numbers will vary according to your setup.
 i2c = machine.I2C(0,
                   scl=machine.Pin(17),  # yellow
-                  sda=machine.Pin(16),  # blue
-                  freq=400000)
+                  sda=machine.Pin(16)  # blue
+                  )#freq=400000)
 
 # Keep looping and reading the sensor results until we get a QR code
 
 def scan():
-    print(i2c.scan())
+    #print(i2c.scan())
     try:
         # Read data from the I2C device
         read_data = i2c.readfrom(TINY_CODE_READER_I2C_ADDRESS, TINY_CODE_READER_I2C_BYTE_COUNT)
