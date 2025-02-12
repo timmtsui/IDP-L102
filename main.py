@@ -280,7 +280,7 @@ servo = PWM(servo_pin)
 # Set Duty Cycle for Different Angles
 max_duty = 7864
 min_duty = 1802
-servo_horizontal = 4833
+servo_horizontal = 4733
 servo_carry = 3300
 servo_highest = 2800
 half_duty = int(max_duty/2)
@@ -320,12 +320,20 @@ Nav_Grid = [
     [[1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0]]
 ]
 
-def pickupscan():
-    motor_left.turn(-10)
+def pickupscan(depot_num=1):
+    if depot_num == 1:
+        motor_left.turn(-10)
+    elif depot_num == 2:
+        motor_left.turn(10)
     
     motor_left.off()
     motor_right.off()
     servo.duty_u16(servo_horizontal)
+    dist = TOF()
+    while dist >= 200:
+        for i in range(20):
+            LineFollow(0.3)
+        dist = TOF()
     for i in range(20):
         LineFollow(0.3)
 
@@ -349,7 +357,7 @@ def pickupscan():
         count +=1
         print("scanning attempt: ", count)
     print("Scanning failed")
-    return (3,1) #Tries to scan 100 times and if not sucessful then just delivers box to nearest depot
+    return (1, 1) #Tries to scan 250 times and if not sucessful then just delivers box to nearest depot
 
 def pickup():
     motor_right.off()
@@ -377,6 +385,7 @@ def pickup():
 ### Main loop
 def navigate(start, end, reverse_first=True,popfirst=False):
     waypoints = astar(Nav_Grid, start, end)
+    last_waypoint = waypoints[-1]
     if popfirst:
         waypoints.pop(0)
     print(waypoints)
@@ -404,9 +413,12 @@ def navigate(start, end, reverse_first=True,popfirst=False):
 
         # Sees junction
         
-        if any([True for k,v in tight_addresses.items() if v == waypoints[0][0]]):
-            both = 1
+        both = 0
+        if any([True for k,v in tight_addresses.items() if v == waypoints[0][0]]) and len(waypoints) > 2:
+            print("Tight turn")
+            both = -1
         else:
+            print("Not tight turn")
             both = 0
         
         print(sense, waypoints[0][1])
@@ -418,7 +430,7 @@ def navigate(start, end, reverse_first=True,popfirst=False):
         
         if True:
             if waypoints[0][2] == "Straight":
-                blindstraight(50,0.5)
+                blindstraight(75, 0.5)
             elif waypoints[0][2] == "Right":
                 motor_left.turn(90, True,both)
                 sleep(0.1)
@@ -456,20 +468,18 @@ def navigate(start, end, reverse_first=True,popfirst=False):
         
 #handles movement and mechanism to pick up box
 # also calls qr code scan and returns drop off coordinates
+
 while True:
-    """ """
-    
     # Navigate out of the box
     servo.duty_u16(servo_highest)
     #blindstraight(50, 2)
-    navigate((4,3), depot_1, False)
+    navigate((3, 4), depot_1, False)
     print("Initial nav finished")
-    servo.duty_u16(servo_horizontal)
 
 
     
     while boxes_delivered < 4:
-
+        # At depot
         destination = pickupscan()
         sleep(0.5)
         pickup()
@@ -493,6 +503,10 @@ while True:
             destination  = start
 
         navigate(current_pos, destination)
+        for i in range(10):
+            LineFollow(0.3)
+            sleep(0.05)
+
     
     """
     if astar(Nav_Grid, depot_1, destination)[0][2] != "Straight":

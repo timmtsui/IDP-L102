@@ -58,7 +58,8 @@ def scan():
         return None
     
 
-while True:
+"""while True:
     print(scan())
     print(i2c.scan())
     sleep(0.1)
+"""

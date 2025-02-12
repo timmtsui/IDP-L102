@@ -41,5 +41,3 @@ def TOF():
         else:
             return int(output) -50
     return 100
-
-
