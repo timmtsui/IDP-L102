@@ -1,7 +1,7 @@
 from machine import Pin, PWM
 from time import sleep
 # Set up PWM Pin for servo control
-servo_pin = Pin(15)
+servo_pin = Pin(13)
 servo = PWM(servo_pin)
 # Set Duty Cycle for Different Angles
 max_duty = 7864
