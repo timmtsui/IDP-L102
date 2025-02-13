@@ -472,8 +472,8 @@ def navigate(start, end, reverse_first=True,popfirst=False):
 while True:
     # Navigate out of the box
     servo.duty_u16(servo_highest)
-    #blindstraight(50, 2)
-    navigate((3, 4), depot_1, False)
+    blindstraight(80, 1)
+    navigate((5, 2), depot_1, False)
     print("Initial nav finished")
 
 
