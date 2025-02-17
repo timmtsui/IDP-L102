@@ -8,8 +8,6 @@ id = 0
 
 i2c = I2C(id=id, sda=sda, scl=scl)
 
-print(i2c.scan())
-
 # print("creating vl53lox object")
 # Create a VL53L0X object
 tof = VL53L0X(i2c)
