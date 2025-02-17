@@ -4,7 +4,7 @@ from machine import Pin, PWM
 from time import sleep
 import heapq
 from qrcode import scan
-#from tof_test import TOF
+from tof_test import TOF
 
 
 MOTOR_RIGHT_RATIO = 0.65
@@ -246,7 +246,7 @@ def astar(nav_grid, start, end):
     return []
 
 def dropoff():
-    blindstraight(80,0.2)
+    blindstraight(80,0.5)
     for i in range(20):
         LineFollow()
     servo.duty_u16(servo_horizontal)
@@ -270,8 +270,9 @@ def ModLineFollow():
 
 ### Variables
 
-special_addresses = {"A": (3,1), "B": (3,3), "C": (1,1), "D":(1,3), "D1": (5, 4), "D2": (5, 0)}
-dropoff_addresses = {"A": (3,1), "B": (3,3), "C": (1,1), "D":(1,3)}
+# Changed A from (3,1) to (3,3)
+special_addresses = {"A": (3,3), "B": (3,3), "C": (1,1), "D":(1,3), "D1": (5, 4), "D2": (5, 0)}
+dropoff_addresses = {"A": (3,3), "B": (3,3), "C": (1,1), "D":(1,3)}
 pickup_addresses = {"D1": (5, 4), "D2": (5, 0)}
 tight_addresses  ={"Bj": (2,3), "Cj": (1,2), "Dj": (0,3)}
 
@@ -281,7 +282,7 @@ S1 = Pin(20, Pin.IN, Pin.PULL_DOWN)
 S2 = Pin(21, Pin.IN, Pin.PULL_DOWN)
 S3 = Pin(22, Pin.IN, Pin.PULL_DOWN)
 S4 = Pin(26, Pin.IN, Pin.PULL_DOWN)
-button = Pin(10, Pin.IN, Pin.PULL_DOWN)
+button = Pin(19, Pin.IN, Pin.PULL_DOWN)
 # Set up PWM Pin for servo control
 servo_pin = Pin(13)
 servo = PWM(servo_pin)
@@ -306,26 +307,27 @@ boxes_delivered = 0
 destination = (0,0)
 
 # Nav_Grid is in [N, E, S, W]
-Nav_Grid = [
+"""Nav_Grid = [
     [[0, 1, 1, 0], [0, 1, 0, 1], [0, 1, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]],
     [[1, 0, 1, 0], [0, 1, 0, 0], [1, 0, 1, 1], [1, 0, 0, 0], [1, 0, 1, 0]],
     [[1, 1, 1, 0], [0, 1, 0, 1], [1, 1, 0, 1], [0, 1, 1, 1], [1, 0, 1, 1]],
     [[1, 0, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0], [1, 0, 0, 0], [1, 0, 1, 0]],
     [[1, 1, 1, 0], [1, 1, 0, 1], [0, 1, 1, 1], [0, 1, 0, 1], [1, 0, 1, 1]],
     [[1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0]]
+]"""
+#Modified grid which stops the robot from turning right out of the box
+Nav_Grid = [
+    [[0, 1, 1, 0], [0, 1, 0, 1], [0, 1, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]],
+    [[1, 0, 1, 0], [0, 1, 0, 0], [1, 0, 1, 1], [1, 0, 0, 0], [1, 0, 1, 0]],
+    [[1, 1, 1, 0], [0, 1, 0, 1], [1, 1, 0, 1], [0, 1, 1, 1], [1, 0, 1, 1]],
+    [[1, 0, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0], [1, 0, 0, 0], [1, 0, 1, 0]],
+    [[1, 1, 1, 0], [1, 1, 0, 1], [0, 0, 1, 1], [0, 0, 0, 0], [1, 0, 1, 0]],
+    [[1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0]]
 ]
 
 def pickupscan(depot_num=1):
-    if depot_num == 1:
-        if astar(Nav_Grid, current_pos, depot_1)[0][2] != "Straight":
-            motor_left.turn(-20)
-            
-        else: 
-            while S4.value() != 0 or S1.value() != 0:
-                ModLineFollow()
-    elif depot_num == 2:
-        motor_left.turn(20)
     
+    blindstraight(80,0.4)
     motor_left.off()
     motor_right.off()
     servo.duty_u16(servo_horizontal)
@@ -343,25 +345,23 @@ def pickupscan(depot_num=1):
     
     if depot_num == 1:
         if astar(Nav_Grid, current_pos, depot_1)[0][2] != "Straight":
-            blindstraight(-40,0.5)
-
-    blindstraight(-50,0.3)
+            blindstraight(-40,0.01)
     
     # LOWER FORKLIFT
     scanned = None
     servo.duty_u16(servo_horizontal)
     sleep(1)
     count = 0
-    while count < 500:
+    while count < 300:
         LineFollow(0.5)
         scanned = scan()
         if scanned != None:
             addr = dropoff_addresses[scanned]
             print("Sucessfully scanned box: ", addr)
             return addr
-        if count % 70 == 0:
+        if count == 300:
+            #blindstraight(-30,0.5)
             pass
-            #blindstraight(-50,0.5)
         count +=1
         print("scanning attempt: ", count)
     print("Scanning failed")
@@ -429,7 +429,7 @@ def navigate(start, end, reverse_first=True,popfirst=False):
             both = 0
         
         print(sense, waypoints[0][1])
-        junctionsense = blindstraight(30, 0.3)
+        junctionsense = blindstraight(70, 0.2)
         if junctionsense == waypoints[0][1]: # Correct junction detected
             print("Correct junction detected")
         else:
@@ -460,7 +460,7 @@ def navigate(start, end, reverse_first=True,popfirst=False):
                 waypoints.pop(0)
             
             for i in range(5):
-                LineFollow(0.3)
+                LineFollow()
                 sleep(0.05)
 
         sleep(0.1)
@@ -480,19 +480,26 @@ def navigate(start, end, reverse_first=True,popfirst=False):
         
 #handles movement and mechanism to pick up box
 # also calls qr code scan and returns drop off coordinates
+
+"""while True:    
+    led_pin.value(1)
+    sleep(10)"""
+
 count = 0
 while count < 20:
     if button.value() == 1:
         count += 1
-        sleep(0.05)
+        sleep(0.01)
     elif button.value() == 0:
         count = max(count-1, 0)
+
+print("Button Pressed")
 
 # Navigate out of the box
 
 current_pos = start
 servo.duty_u16(servo_highest)
-blindstraight(50, 1)
+blindstraight(80, 1)
 led_pin.value(1)
 navigate((5, 2), depot_1, False)
 print("Initial nav finished")
@@ -523,11 +530,13 @@ while boxes_delivered < 4:
 
     navigate(current_pos, destination)
 
+motor_left.turn(-20)
 #Final movement into depot
-blindstraight(80,1.5)
+blindstraight(80,2)
 
 led_pin.value(0)
 
 motor_left.off()
 motor_right.off()
+
 
