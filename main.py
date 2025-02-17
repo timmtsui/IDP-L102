@@ -4,7 +4,7 @@ from machine import Pin, PWM
 from time import sleep
 import heapq
 from qrcode import scan
-from tof_test import TOF
+#from tof_test import TOF
 
 
 MOTOR_RIGHT_RATIO = 0.65
@@ -94,7 +94,7 @@ def LineFollow(ratio=1.0):
 
 def blindstraight(speed, time):
     motor_left.speed(speed)
-    motor_right.speed(speed*MOTOR_RIGHT_RATIO)
+    motor_right.speed(speed*MOTOR_RIGHT_RATIO*1.3)
     senseall = [0, 0, 0 ,0]
 
     for i in range(20):
@@ -246,18 +246,26 @@ def astar(nav_grid, start, end):
     return []
 
 def dropoff():
+    blindstraight(80,0.2)
+    for i in range(20):
+        LineFollow()
     servo.duty_u16(servo_horizontal)
-    blindstraight(-10, 2)
+    blindstraight(-10, 1.5)
     servo.duty_u16(servo_carry)
     return
 
-def get_button(button_status):
-    count = 0
-    if button.value() == 0:
-        """while count < 20:
-            count += button.value()"""
-        return 0 # Returns toggled button status
-    return 1
+def ModLineFollow():
+    if S3.value() == 1 and S1.value() == 1:
+        motor_left.speed(50)
+        motor_right.speed(-50*MOTOR_RIGHT_RATIO)
+        #print("Turn right")
+        sleep(0.05)
+    elif S2.value() == 1 and S4.value() == 1:
+        motor_left.speed(-50)
+        motor_right.speed(50*MOTOR_RIGHT_RATIO)
+    else:
+        motor_left.speed(50)
+        motor_right.speed(50)
 
 
 ### Variables
@@ -273,10 +281,11 @@ S1 = Pin(20, Pin.IN, Pin.PULL_DOWN)
 S2 = Pin(21, Pin.IN, Pin.PULL_DOWN)
 S3 = Pin(22, Pin.IN, Pin.PULL_DOWN)
 S4 = Pin(26, Pin.IN, Pin.PULL_DOWN)
-#button = Pin(22, Pin.IN, Pin.PULL_DOWN)
+button = Pin(10, Pin.IN, Pin.PULL_DOWN)
 # Set up PWM Pin for servo control
 servo_pin = Pin(13)
 servo = PWM(servo_pin)
+led_pin = Pin(12, Pin.OUT)
 # Set Duty Cycle for Different Angles
 max_duty = 7864
 min_duty = 1802
@@ -286,20 +295,6 @@ servo_highest = 2800
 half_duty = int(max_duty/2)
 #Set PWM frequency
 frequency = 50
-
-"""
-servo_pin = Pin(13)
-servo = PWM(servo_pin)
-# Set Duty Cycle for Different Angles
-max_duty = 7864
-min_duty = 1802
-servo_horizontal = 4833
-servo_carry = 3300
-servo_highest = 2800
-half_duty = int(max_duty/2)
-#Set PWM frequency
-frequency = 50
-"""
 servo.freq(frequency)
 
 on = 0
@@ -322,30 +317,43 @@ Nav_Grid = [
 
 def pickupscan(depot_num=1):
     if depot_num == 1:
-        motor_left.turn(-10)
+        if astar(Nav_Grid, current_pos, depot_1)[0][2] != "Straight":
+            motor_left.turn(-20)
+            
+        else: 
+            while S4.value() != 0 or S1.value() != 0:
+                ModLineFollow()
     elif depot_num == 2:
-        motor_left.turn(10)
+        motor_left.turn(20)
     
     motor_left.off()
     motor_right.off()
     servo.duty_u16(servo_horizontal)
     dist = TOF()
-    while dist >= 200:
-        for i in range(20):
-            LineFollow(0.3)
+    avg_dist = 1000
+    print(dist)
+    sleep(1)
+    while avg_dist > 200:
+        avg_dist = avg_dist*0.3 + dist*0.7
         dist = TOF()
+        for i in range(20):
+            LineFollow(0.5)
     for i in range(20):
         LineFollow(0.3)
+    
+    if depot_num == 1:
+        if astar(Nav_Grid, current_pos, depot_1)[0][2] != "Straight":
+            blindstraight(-40,0.5)
 
-    blindstraight(-50,0.5)
+    blindstraight(-50,0.3)
     
     # LOWER FORKLIFT
     scanned = None
     servo.duty_u16(servo_horizontal)
     sleep(1)
     count = 0
-    while count < 250:
-        LineFollow(0.3)
+    while count < 500:
+        LineFollow(0.5)
         scanned = scan()
         if scanned != None:
             addr = dropoff_addresses[scanned]
@@ -382,7 +390,6 @@ def pickup():
     sleep(1)
     return
 
-### Main loop
 def navigate(start, end, reverse_first=True,popfirst=False):
     waypoints = astar(Nav_Grid, start, end)
     last_waypoint = waypoints[-1]
@@ -430,7 +437,12 @@ def navigate(start, end, reverse_first=True,popfirst=False):
         
         if True:
             if waypoints[0][2] == "Straight":
-                blindstraight(75, 0.5)
+                while S4.value() != 0 or S1.value() != 0:
+                     # Modified version of linefollow only using one side
+                        #print("Move forward")
+                    ModLineFollow()
+
+
             elif waypoints[0][2] == "Right":
                 motor_left.turn(90, True,both)
                 sleep(0.1)
@@ -468,55 +480,54 @@ def navigate(start, end, reverse_first=True,popfirst=False):
         
 #handles movement and mechanism to pick up box
 # also calls qr code scan and returns drop off coordinates
+count = 0
+while count < 20:
+    if button.value() == 1:
+        count += 1
+        sleep(0.05)
+    elif button.value() == 0:
+        count = max(count-1, 0)
 
-while True:
-    # Navigate out of the box
-    servo.duty_u16(servo_highest)
-    blindstraight(80, 1)
-    navigate((5, 2), depot_1, False)
-    print("Initial nav finished")
+# Navigate out of the box
+
+current_pos = start
+servo.duty_u16(servo_highest)
+blindstraight(50, 1)
+led_pin.value(1)
+navigate((5, 2), depot_1, False)
+print("Initial nav finished")
+
+while boxes_delivered < 4:
+    # At depot
+    destination = pickupscan()
+    sleep(0.5)
+    pickup()
+    motor_left.off()
+    motor_right.off()
 
 
-    
-    while boxes_delivered < 4:
-        # At depot
-        destination = pickupscan()
-        sleep(0.5)
-        pickup()
-        motor_left.off()
-        motor_right.off()
-
-
-        blindstraight(-5,1+boxes_delivered/3)
-        motor_left.turn(-180,True,-1)
-        Nav_Grid[4][4][3] = 0
-        navigate(depot_1, destination, False,True)
-        boxes_delivered += 1
-        Nav_Grid[4][4][3] = 1
-
-
-        current_pos = destination
-        
-        if boxes_delivered <= 3:
-            destination = depot_1
-        else:
-            destination  = start
-
-        navigate(current_pos, destination)
-        for i in range(10):
-            LineFollow(0.3)
-            sleep(0.05)
-
-    
-    """
-    if astar(Nav_Grid, depot_1, destination)[0][2] != "Straight":
-        blindstraight(-10,1+boxes_delivered)
-        motor_left.turn(90, True)
-    else:
-        motor_left.turn(-180,True,-1)
+    blindstraight(-5,1+boxes_delivered/3)
+    motor_left.turn(-180,True,-1)
+    Nav_Grid[4][4][3] = 0
     navigate(depot_1, destination, False,True)
-    """
+    boxes_delivered += 1
+    Nav_Grid[4][4][3] = 1
 
 
+    current_pos = destination
+    
+    if boxes_delivered <= 3:
+        destination = depot_1
+    else:
+        destination  = start
 
-    break
+    navigate(current_pos, destination)
+
+#Final movement into depot
+blindstraight(80,1.5)
+
+led_pin.value(0)
+
+motor_left.off()
+motor_right.off()
+
